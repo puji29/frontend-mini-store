@@ -1,14 +1,58 @@
 "use client";
+import { debounce } from 'lodash';
 import { Button } from "@/components/ui/button";
-import { ShoppingBasket } from "lucide-react";
-import { useState } from "react";
+import GlobalApi from "@/lib/GlobalApi";
+import { LoaderCircle, ShoppingBasket } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useContext, useState } from "react";
+import { toast } from "sonner";
+import { UpdateCartContext } from '../_context/UpdateCartContext';
 
 function ProductItemDetail({ product }) {
+  const jwt = sessionStorage.getItem("jwt");
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const {updateCart,setUpdateCart}=useContext(UpdateCartContext)
   const [productTotalPrice, setProudctTotalPrice] = useState(
     product.sellingPrice ? product.sellingPrice : product.stock
   );
-
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
+  const [loading,setLoading]= useState(false)
+
+  const addToCart = useCallback(debounce(async () => {
+    if (loading) return;
+  
+    setLoading(true);
+    if (!jwt) {
+      router.push("/sign-in");
+      setLoading(false);
+      return;
+    }
+  
+    const data = {
+      quantity: quantity,
+      amount: quantity * productTotalPrice,
+      userId: user.user_id,
+      productId: product.id,
+    };
+  
+    try {
+      const res = await GlobalApi.addToCart(data, jwt);
+      console.log(res.data);
+      toast("Added New Cart");
+      setUpdateCart(!updateCart)
+    } catch (e) {
+      console.error(e);
+      toast("Error while adding to cart");
+      if (e.response && e.response.data && e.response.data.message) {
+        toast(e.response.data.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  },300), [loading, jwt, quantity, productTotalPrice, user.user_id, product.id]);
+  
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 p-7 bg-white text-black">
       <img
@@ -37,15 +81,25 @@ function ProductItemDetail({ product }) {
         <div className="flex flex-col items-baseline gap-3">
           <div className="flex gap-2 items-center">
             <div className="p-2 border flex gap-10 items-center px-5">
-              <button disabled={quantity==1} onClick={()=>setQuantity(quantity-1)}>-</button>
+              <button
+                disabled={quantity == 1}
+                onClick={() => setQuantity(quantity - 1)}
+              >
+                -
+              </button>
               <h2> {quantity}</h2>
-              <button onClick={()=>setQuantity(quantity+1)}>+</button>
+              <button onClick={() => setQuantity(quantity + 1)}>+</button>
             </div>
-            <h2 className="text-2xl font-bold"> =Rp {(quantity*productTotalPrice)}</h2>
+            <h2 className="text-2xl font-bold">
+              {" "}
+              =Rp {quantity * productTotalPrice}
+            </h2>
           </div>
-          <Button className="flex gap-3">
+          <Button className="flex gap-3" onClick={() => addToCart()}
+          disabled={loading}
+          >
             <ShoppingBasket />
-            Add To Cart
+            {loading?<LoaderCircle className="animate-spin" />:'Add To Cart'} 
           </Button>
         </div>
         <h2>

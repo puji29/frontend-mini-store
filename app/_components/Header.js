@@ -1,7 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { CircleUserRound, LayoutGrid, Search, ShoppingBag } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import {
+  CircleUserRound,
+  LayoutGrid,
+  Search,
+  ShoppingBag,
+  ShoppingBasket,
+} from "lucide-react";
+import React, { useContext, useEffect, useState } from "react";
 
 import {
   DropdownMenu,
@@ -11,32 +17,72 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 import GlobalApi from "@/lib/GlobalApi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { UpdateCartContext } from "../_context/UpdateCartContext";
+import CartItemList from "./CartItemList";
+import { toast } from "sonner";
 
 function Header() {
   const [categoryList, setCategoryList] = useState([]);
-  const router = useRouter()
+  const [totalCartItem, setTotalCartItem] = useState(0);
+  const isLogin = sessionStorage.getItem("jwt") ? true : false;
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const jwt = sessionStorage.getItem("jwt");
+  const { updateCart, setUpdateCart } = useContext(UpdateCartContext);
+  const [cartItemList, setCartItemList] = useState([]);
+  const router = useRouter();
+  const [subTotal,setSubTotal]= useState(0)
 
-  let isLogin = false;
+  const getCartItems = async () => {
+    const cartItemList_ = await GlobalApi.getCartItems(user.user_id, jwt);
+    console.log(cartItemList_);
+    setTotalCartItem(cartItemList_.length);
+    setCartItemList(cartItemList_);
+  };
 
   useEffect(() => {
-    isLogin = sessionStorage.getItem("jwt") ? true : false;
     getCategoryList();
   }, []);
   const getCategoryList = async () => {
     GlobalApi.getCategory().then((res) => {
       setCategoryList(res.data);
-      
     });
   };
 
-  const onSignOut=()=>{
-    sessionStorage.clear()
-    router.push('/sign-in')
-  }
+  useEffect(() => {
+    getCartItems();
+  }, [updateCart]);
+  const onSignOut = () => {
+    sessionStorage.clear();
+    router.push("/sign-in");
+  };
+
+  const onDeleteItem = (id) => {
+    GlobalApi.deleteCartItem(id, jwt).then((res) => {
+      toast("Item removed ! ");
+      getCartItems();
+    });
+  };
+
+  useEffect(() => {
+    let total = 0;
+    cartItemList.forEach((element) => {
+      total = total + element.amount;
+    });
+    setSubTotal(total);
+  }, [cartItemList]);
   return (
     <div className="p-5 shadow-sm flex justify-between">
       <div className="flex items-center gap-8">
@@ -75,16 +121,45 @@ function Header() {
         </div>
       </div>
       <div className="flex gap-5 items-center">
-        <h2 className="flex gap-2 items-center text-lg">
-          <ShoppingBag />0
-        </h2>
-        {isLogin ? 
+        <Sheet>
+          <SheetTrigger>
+            <h2 className="flex gap-2 items-center text-lg">
+              <ShoppingBasket className="h-7 w-7" />
+              <span className="bg-primary text-white  px-2 rounded-full">
+                {totalCartItem}
+              </span>
+            </h2>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle className="bg-primary text-white font-bold text-lg p-2">
+                My Cart
+              </SheetTitle>
+              <SheetDescription>
+                <CartItemList
+                  cartItemList={cartItemList}
+                  onDeleteItem={onDeleteItem}
+                />
+              </SheetDescription>
+            </SheetHeader>
+            <SheetClose asChild>
+              <div className="absolute w-[90%] mb-6 flex flex-col">
+                <h2 className="text-lg font-bold flex justify-between">
+                  Subtotal: <span>Rp. {subTotal}</span>
+                </h2>
+                <Button onClick={()=>router.push(jwt? "/checkout":"/sign-in")}>Checkout</Button>
+              </div>
+            </SheetClose>
+          </SheetContent>
+        </Sheet>
+
+        {!isLogin ? (
           <Link href={"/sign-in"}>
             <Button>Login</Button>
           </Link>
-         : 
+        ) : (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild >
+            <DropdownMenuTrigger asChild>
               <CircleUserRound className="bg-green-100 text-primary p-2 rounded-full cursor-pointer h-12 w-12" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -92,10 +167,12 @@ function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>My Order</DropdownMenuItem>
-              <DropdownMenuItem onClick={()=>onSignOut()}>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSignOut()}>
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        }
+        )}
       </div>
     </div>
   );
