@@ -10,7 +10,7 @@ function CartItemList({ cartItemList,onDeleteItem }) {
   
   return (
     <div className="">
-      <div className="h-[500px] overflow-auto">
+      <div className="h-[500px] sm:h-[450px] overflow-auto">
           {cartItemList.map((cart, index) => (
             <div className="flex justify-between items-center p-2 mb-5">
               <div className="flex gap-6 items-center">
@@ -24,7 +24,7 @@ function CartItemList({ cartItemList,onDeleteItem }) {
                 <div className="">
                   <h2 className="font-bold">{cart.name}</h2>
                   <h2 className="">Quantity:{cart.quantity}</h2>
-                  <h2 className="text-lg font-bold">Rp. {cart.amount}</h2>
+                  <h2 className="text-lg font-bold">${(cart.amount).toFixed(2)}</h2>
                 </div>
               </div>
                 <TrashIcon

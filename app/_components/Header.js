@@ -145,7 +145,7 @@ function Header() {
             <SheetClose asChild>
               <div className="absolute w-[90%] mb-6 flex flex-col">
                 <h2 className="text-lg font-bold flex justify-between">
-                  Subtotal: <span>Rp. {subTotal}</span>
+                  Subtotal: <span>${(subTotal).toFixed(2)}</span>
                 </h2>
                 <Button onClick={()=>router.push(jwt? "/checkout":"/sign-in")}>Checkout</Button>
               </div>

@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GlobalApi from "@/lib/GlobalApi";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import { ArrowBigRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -13,12 +14,12 @@ function page() {
   const [cartItemList, setCartItemList] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
 
-  const [username,setUsername]= useState()
-  const [email,setEmail]= useState()
-  const [phone,setPhone]= useState()
-  const [zip,setZip]= useState()
-  const [address,setAddress]= useState()
-
+  const [username, setUsername] = useState();
+  const [email, setEmail] = useState();
+  const [phone, setPhone] = useState();
+  const [zip, setZip] = useState();
+  const [address, setAddress] = useState();
+  const [totalAmount, setTotalAmount] = useState();
   const router = useRouter();
 
   useEffect(() => {
@@ -39,13 +40,19 @@ function page() {
     cartItemList.forEach((element) => {
       total = total + element.amount;
     });
-    setSubTotal(total);
+    setTotalAmount((total * 0.9 + 15).toFixed(2));
+    setSubTotal((total).toFixed(2));
   }, [cartItemList]);
 
   const calculateTotalAmount = () => {
     const totalAmount = subTotal * 0.9 + 15;
+
     return totalAmount;
   };
+
+  const onApprove=(data)=>{
+    console.log(data)
+  }
 
   return (
     <div>
@@ -56,15 +63,27 @@ function page() {
         <div className="md:col-span-2 mx-20 mb-4">
           <h2 className="font-nold text-3xl">Billing Details</h2>
           <div className="grid grid-cols-2 gap-10 mt-3">
-            <Input placeholder="Name" onChange={(e)=>setUsername(e.target.value)}/>
-            <Input placeholder="Email" onChange={(e)=>setEmail(e.target.value)} />
+            <Input
+              placeholder="Name"
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <Input
+              placeholder="Email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div className="grid grid-cols-2 gap-10 mt-3">
-            <Input placeholder="Phone" onChange={(e)=>setPhone(e.target.value)} />
-            <Input placeholder="Zip" onChange={(e)=>setZip(e.target.value)} />
+            <Input
+              placeholder="Phone"
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            <Input placeholder="Zip" onChange={(e) => setZip(e.target.value)} />
           </div>
           <div className="mt-3">
-            <Input placeholder="Address" onChange={(e)=>setAddress(e.target.value)} />
+            <Input
+              placeholder="Address"
+              onChange={(e) => setAddress(e.target.value)}
+            />
           </div>
         </div>
         <div className="mx-10 border">
@@ -73,22 +92,36 @@ function page() {
           </h2>
           <div className="p-4 flex flex-col gap-4">
             <h2 className="font-bold flex justify-between">
-              Subtotal : <span>Rp. {subTotal}</span>
+              Subtotal : <span>${subTotal}</span>
             </h2>
             <hr />
             <h2 className="flex justify-between">
-              Delivery: : <span>Rp. 15000</span>
+              Delivery: : <span>$ 15.00</span>
             </h2>
             <h2 className="flex justify-between">
-              Tax (9%) : <span>Rp. {cartItemList*0.9}</span>
+              Tax (9%) : <span>${(totalCartItem * 0.9).toFixed(2)}</span>
             </h2>
             <hr />
             <h2 className="font-bold flex justify-between">
-              Total : <span>Rp. {calculateTotalAmount()}</span>
+              Total : <span>${calculateTotalAmount()}</span>
             </h2>
-            <Button>
-              Payment <ArrowBigRight />
-            </Button>
+
+            <PayPalButtons
+              style={{ layout: "horizontal" }}
+              onApprove={onApprove}
+              createOrder={(data, actions) => {
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      amount: {
+                        value: totalAmount,
+                        currency_code: "USD",
+                      },
+                    },
+                  ],
+                });
+              }}
+            />
           </div>
         </div>
       </div>

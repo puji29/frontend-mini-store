@@ -22,14 +22,14 @@ function ProductItem({ product }) {
       <h2 className="font-bold text-lg">{product.name}</h2>
       <div className="flex gap-3">
         {product.sellingPrice && (
-          <h2 className="font-bold text-lg">Rp. {product.sellingPrice}</h2>
+          <h2 className="font-bold text-lg">$ {(product.sellingPrice).toFixed(2)}</h2>
         )}
         <h2
           className={`font-bold text-lg ${
             product.sellingPrice && "line-through text-gray-500"
           }`}
         >
-          Rp. {product.price}
+          ${(product.price).toFixed(2)}
         </h2>
       </div>
 

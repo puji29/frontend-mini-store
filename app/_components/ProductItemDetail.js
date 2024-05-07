@@ -67,14 +67,14 @@ function ProductItemDetail({ product }) {
         <h2 className="text-sm  text-gray-500">{product.description}</h2>
         <div className="flex gap-3 ">
           {product.sellingPrice && (
-            <h2 className="font-bold text-3xl">Rp. {product.sellingPrice}</h2>
+            <h2 className="font-bold text-3xl">${(product.sellingPrice).toFixed(2)}</h2>
           )}
           <h2
             className={`font-bold text-3xl ${
               product.sellingPrice && "line-through text-gray-500"
             }`}
           >
-            Rp. {product.price}
+            ${(product.price).toFixed(2)}
           </h2>
         </div>
         <h2 className="font-medium text-lg">Stock ({product.stock})</h2>
@@ -92,7 +92,7 @@ function ProductItemDetail({ product }) {
             </div>
             <h2 className="text-2xl font-bold">
               {" "}
-              =Rp {quantity * productTotalPrice}
+              =${(quantity * productTotalPrice).toFixed(2)}
             </h2>
           </div>
           <Button className="flex gap-3" onClick={() => addToCart()}
