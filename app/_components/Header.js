@@ -86,7 +86,7 @@ function Header() {
   return (
     <div className="p-5 shadow-sm flex justify-between">
       <div className="flex items-center gap-8">
-        <img src="/logo.png" alt="logo" width={40} height={50} />
+        <Link href={"/"}> <img src="/logo.png" alt="logo" width={40} height={50} /></Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -165,8 +165,9 @@ function Header() {
             <DropdownMenuContent>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>My Order</DropdownMenuItem>
+             <DropdownMenuItem>Profile</DropdownMenuItem>
+             <Link href={"/my-order"}
+              ><DropdownMenuItem>My Order</DropdownMenuItem></Link> 
               <DropdownMenuItem onClick={() => onSignOut()}>
                 Logout
               </DropdownMenuItem>

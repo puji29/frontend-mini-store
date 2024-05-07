@@ -5,7 +5,8 @@ import GlobalApi from "@/lib/GlobalApi";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { ArrowBigRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 function page() {
   const user = JSON.parse(sessionStorage.getItem("user"));
@@ -14,11 +15,17 @@ function page() {
   const [cartItemList, setCartItemList] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
 
-  const [username, setUsername] = useState();
-  const [email, setEmail] = useState();
-  const [phone, setPhone] = useState();
-  const [zip, setZip] = useState();
-  const [address, setAddress] = useState();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState(""); // provide an initial value
+  const [zip, setZip] = useState(""); // provide an initial value
+  const [address, setAddress] = useState("");
+  
+  const usernameRef = useRef("");
+  const emailRef = useRef("");
+  const phoneRef = useRef("");
+  const zipRef = useRef("");
+  const addressRef = useRef("");
   const [totalAmount, setTotalAmount] = useState();
   const router = useRouter();
 
@@ -41,7 +48,7 @@ function page() {
       total = total + element.amount;
     });
     setTotalAmount((total * 0.9 + 15).toFixed(2));
-    setSubTotal((total).toFixed(2));
+    setSubTotal(total.toFixed(2));
   }, [cartItemList]);
 
   const calculateTotalAmount = () => {
@@ -50,9 +57,50 @@ function page() {
     return totalAmount;
   };
 
-  const onApprove=(data)=>{
-    console.log(data)
-  }
+  const onApprove = (data) => {
+    console.log(data);
+    console.log("isi cart", cartItemList);
+
+    let quantities = [];
+    let amounts = [];
+    let productIds = [];
+
+    cartItemList.forEach((item) => {
+      if (item.quantity !== null && item.quantity !== undefined) {
+        quantities.push(item.quantity);
+        amounts.push(item.amount);
+        productIds.push(item.productId); // assuming products is an object with an id property
+      } else {
+        console.error("Item quantity is null or undefined:", item);
+      }
+    });
+
+    const payload = {
+      username: usernameRef.current,
+      email: emailRef.current,
+      phone: phoneRef.current,
+      zip: zipRef.current,
+      address: addressRef.current,
+      totalOrderAmount: totalAmount,
+      userId: user.user_id,
+      paymentId: data.paymentID,
+      quantity: quantities,
+      amount: amounts,
+      productId: productIds,
+    };
+
+    console.log(payload);
+    GlobalApi.createOrder(payload, jwt).then((res) => {
+      console.log(res);
+      toast("Order places Succesfully");
+      cartItemList.forEach((item,index)=>{
+        GlobalApi.deleteCartItem(item.id).then(res=>{
+
+        })
+      })
+    });
+    router.replace("/order-confirmation")
+  };
 
   return (
     <div>
@@ -65,24 +113,43 @@ function page() {
           <div className="grid grid-cols-2 gap-10 mt-3">
             <Input
               placeholder="Name"
-              onChange={(e) => setUsername(e.target.value)}
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                usernameRef.current = e.target.value; // update the ref when state changes
+              }}
             />
             <Input
               placeholder="Email"
-              onChange={(e) => setEmail(e.target.value)}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                emailRef.current = e.target.value; // update the ref when state changes
+              }}
             />
           </div>
           <div className="grid grid-cols-2 gap-10 mt-3">
             <Input
               placeholder="Phone"
-              onChange={(e) => setPhone(e.target.value)}
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                phoneRef.current = e.target.value; // update the ref when state changes
+              }}
             />
-            <Input placeholder="Zip" onChange={(e) => setZip(e.target.value)} />
+            <Input placeholder="Zip"  onChange={(e) => {
+                setZip(e.target.value);
+                zipRef.current = e.target.value; // update the ref when state changes
+              }} />
           </div>
           <div className="mt-3">
             <Input
               placeholder="Address"
-              onChange={(e) => setAddress(e.target.value)}
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                addressRef.current = e.target.value; // update the ref when state changes
+              }}
             />
           </div>
         </div>
@@ -105,8 +172,12 @@ function page() {
             <h2 className="font-bold flex justify-between">
               Total : <span>${calculateTotalAmount()}</span>
             </h2>
+            {/* <Button onClick={() => onApprove({ paymentId: 123 })}>
+              <ArrowBigRight />
+            </Button> */}
 
-            <PayPalButtons
+            {totalAmount>15&& <PayPalButtons
+              disabled={!(username&&email&&address&&zip)}
               style={{ layout: "horizontal" }}
               onApprove={onApprove}
               createOrder={(data, actions) => {
@@ -121,7 +192,8 @@ function page() {
                   ],
                 });
               }}
-            />
+              />
+            }
           </div>
         </div>
       </div>
