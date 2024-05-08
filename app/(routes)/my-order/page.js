@@ -46,8 +46,9 @@ function MyOrder() {
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-               
-                    <MyOrderItem orderItem={item.orderItemList}/>
+               {item.orderItemList.map((order,index)=>(
+                    <MyOrderItem orderItem={order} key={index}/>
+               ))}
                
               </CollapsibleContent>
             </Collapsible>
