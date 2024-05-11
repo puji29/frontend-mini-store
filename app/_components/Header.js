@@ -37,13 +37,13 @@ import { toast } from "sonner";
 function Header() {
   const [categoryList, setCategoryList] = useState([]);
   const [totalCartItem, setTotalCartItem] = useState(0);
-  const isLogin = sessionStorage.getItem("jwt") ? true : false;
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  const jwt = sessionStorage.getItem("jwt");
+  const [isLogin, setIsLogin] = useState(false);
+  const [user, setUser] = useState(null);
+  const [jwt, setJwt] = useState(null);
   const { updateCart, setUpdateCart } = useContext(UpdateCartContext);
   const [cartItemList, setCartItemList] = useState([]);
   const router = useRouter();
-  const [subTotal,setSubTotal]= useState(0)
+  const [subTotal, setSubTotal] = useState(0);
 
   const getCartItems = async () => {
     const cartItemList_ = await GlobalApi.getCartItems(user.user_id, jwt);
@@ -51,6 +51,18 @@ function Header() {
     setTotalCartItem(cartItemList_.length);
     setCartItemList(cartItemList_);
   };
+  
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const jwtValue = sessionStorage.getItem("jwt");
+      const userValue = JSON.parse(sessionStorage.getItem("user"));
+
+      setIsLogin(jwtValue ? true : false);
+      setUser(userValue);
+      setJwt(jwtValue);
+    }
+  }, []);
 
   useEffect(() => {
     getCategoryList();
@@ -86,7 +98,10 @@ function Header() {
   return (
     <div className="p-5 shadow-sm flex justify-between">
       <div className="flex items-center gap-8">
-        <Link href={"/"}> <img src="/logo.png" alt="logo" width={40} height={50} /></Link>
+        <Link href={"/"}>
+          {" "}
+          <img src="/logo.png" alt="logo" width={40} height={50} />
+        </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -145,9 +160,13 @@ function Header() {
             <SheetClose asChild>
               <div className="absolute w-[90%] mb-6 flex flex-col">
                 <h2 className="text-lg font-bold flex justify-between">
-                  Subtotal: <span>${(subTotal).toFixed(2)}</span>
+                  Subtotal: <span>${subTotal.toFixed(2)}</span>
                 </h2>
-                <Button onClick={()=>router.push(jwt? "/checkout":"/sign-in")}>Checkout</Button>
+                <Button
+                  onClick={() => router.push(jwt ? "/checkout" : "/sign-in")}
+                >
+                  Checkout
+                </Button>
               </div>
             </SheetClose>
           </SheetContent>
@@ -165,9 +184,10 @@ function Header() {
             <DropdownMenuContent>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-             <DropdownMenuItem>Profile</DropdownMenuItem>
-             <Link href={"/my-order"}
-              ><DropdownMenuItem>My Order</DropdownMenuItem></Link> 
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <Link href={"/my-order"}>
+                <DropdownMenuItem>My Order</DropdownMenuItem>
+              </Link>
               <DropdownMenuItem onClick={() => onSignOut()}>
                 Logout
               </DropdownMenuItem>
