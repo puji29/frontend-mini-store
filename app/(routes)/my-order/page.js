@@ -11,10 +11,22 @@ import moment from "moment";
 import MyOrderItem from "./_components/MyOrderItem";
 
 function MyOrder() {
-  const jwt = sessionStorage.getItem("jwt");
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  
   const [orderList, setOrderList] = useState([]);
   const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [jwt, setJwt] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const jwt = sessionStorage.getItem("jwt");
+      const user = JSON.parse(sessionStorage.getItem("user"));
+  
+      setIsLogin(jwt ? true : false);
+      setUser(user);
+      setJwt(jwt);
+    }
+  }, []);
 
   useEffect(() => {
     if (!jwt) {

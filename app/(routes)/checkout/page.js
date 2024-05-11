@@ -9,8 +9,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 function page() {
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  const jwt = sessionStorage.getItem("jwt");
+  // const user = JSON.parse(sessionStorage.getItem("user"));
+  // const jwt = sessionStorage.getItem("jwt");
   const [totalCartItem, setTotalCartItem] = useState(0);
   const [cartItemList, setCartItemList] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
@@ -28,6 +28,21 @@ function page() {
   const addressRef = useRef("");
   const [totalAmount, setTotalAmount] = useState();
   const router = useRouter();
+
+  
+  const [user, setUser] = useState(null);
+  const [jwt, setJwt] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const jwt = sessionStorage.getItem("jwt");
+      const user = JSON.parse(sessionStorage.getItem("user"));
+  
+      setIsLogin(jwt ? true : false);
+      setUser(user);
+      setJwt(jwt);
+    }
+  }, []);
 
   useEffect(() => {
     if (!jwt) {

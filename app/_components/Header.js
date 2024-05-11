@@ -55,12 +55,12 @@ function Header() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const jwtValue = sessionStorage.getItem("jwt");
-      const userValue = JSON.parse(sessionStorage.getItem("user"));
+      const jwt = sessionStorage.getItem("jwt");
+      const user = JSON.parse(sessionStorage.getItem("user"));
 
-      setIsLogin(jwtValue ? true : false);
-      setUser(userValue);
-      setJwt(jwtValue);
+      setIsLogin(jwt ? true : false);
+      setUser(user);
+      setJwt(jwt);
     }
   }, []);
 
