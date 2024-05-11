@@ -9,8 +9,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 function page() {
-  // const user = JSON.parse(sessionStorage.getItem("user"));
-  // const jwt = sessionStorage.getItem("jwt");
+  const [user, setUser] = useState(null);
+  const [jwt, setJwt] = useState(null);
   const [totalCartItem, setTotalCartItem] = useState(0);
   const [cartItemList, setCartItemList] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
@@ -20,7 +20,7 @@ function page() {
   const [phone, setPhone] = useState(""); // provide an initial value
   const [zip, setZip] = useState(""); // provide an initial value
   const [address, setAddress] = useState("");
-  
+
   const usernameRef = useRef("");
   const emailRef = useRef("");
   const phoneRef = useRef("");
@@ -29,27 +29,23 @@ function page() {
   const [totalAmount, setTotalAmount] = useState();
   const router = useRouter();
 
-  
-  const [user, setUser] = useState(null);
-  const [jwt, setJwt] = useState(null);
-
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const jwt = sessionStorage.getItem("jwt");
-      const user = JSON.parse(sessionStorage.getItem("user"));
-  
-      
-      setUser(user);
-      setJwt(jwt);
+      const jwtValue = sessionStorage.getItem("jwt");
+      const userValue = JSON.parse(sessionStorage.getItem("user"));
+
+      setUser(userValue);
+      setJwt(jwtValue);
+
+      if (!jwtValue) {
+        router.push("/sign-in");
+      }
+      if (userValue) {
+        getCartItems();
+      }
     }
   }, []);
 
-  useEffect(() => {
-    if (!jwt) {
-      router.push("/sign-in");
-    }
-    getCartItems();
-  }, []);
   const getCartItems = async () => {
     const cartItemList_ = await GlobalApi.getCartItems(user.user_id, jwt);
     console.log(cartItemList_);
@@ -108,13 +104,11 @@ function page() {
     GlobalApi.createOrder(payload, jwt).then((res) => {
       console.log(res);
       toast("Order places Succesfully");
-      cartItemList.forEach((item,index)=>{
-        GlobalApi.deleteCartItem(item.id).then(res=>{
-
-        })
-      })
+      cartItemList.forEach((item, index) => {
+        GlobalApi.deleteCartItem(item.id).then((res) => {});
+      });
     });
-    router.replace("/order-confirmation")
+    router.replace("/order-confirmation");
   };
 
   return (
@@ -152,10 +146,13 @@ function page() {
                 phoneRef.current = e.target.value; // update the ref when state changes
               }}
             />
-            <Input placeholder="Zip"  onChange={(e) => {
+            <Input
+              placeholder="Zip"
+              onChange={(e) => {
                 setZip(e.target.value);
                 zipRef.current = e.target.value; // update the ref when state changes
-              }} />
+              }}
+            />
           </div>
           <div className="mt-3">
             <Input
@@ -191,24 +188,25 @@ function page() {
               <ArrowBigRight />
             </Button> */}
 
-            {totalAmount>15&& <PayPalButtons
-              disabled={!(username&&email&&address&&zip)}
-              style={{ layout: "horizontal" }}
-              onApprove={onApprove}
-              createOrder={(data, actions) => {
-                return actions.order.create({
-                  purchase_units: [
-                    {
-                      amount: {
-                        value: totalAmount,
-                        currency_code: "USD",
+            {totalAmount > 15 && (
+              <PayPalButtons
+                disabled={!(username && email && address && zip)}
+                style={{ layout: "horizontal" }}
+                onApprove={onApprove}
+                createOrder={(data, actions) => {
+                  return actions.order.create({
+                    purchase_units: [
+                      {
+                        amount: {
+                          value: totalAmount,
+                          currency_code: "USD",
+                        },
                       },
-                    },
-                  ],
-                });
-              }}
+                    ],
+                  });
+                }}
               />
-            }
+            )}
           </div>
         </div>
       </div>
