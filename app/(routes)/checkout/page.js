@@ -38,7 +38,7 @@ function page() {
       const jwt = sessionStorage.getItem("jwt");
       const user = JSON.parse(sessionStorage.getItem("user"));
   
-      setIsLogin(jwt ? true : false);
+      
       setUser(user);
       setJwt(jwt);
     }
